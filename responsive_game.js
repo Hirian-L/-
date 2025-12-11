@@ -49,6 +49,10 @@ const hint = document.getElementById('hint');
 const cooldownEl = document.getElementById('cooldown');
 const captureBtn = document.getElementById('captureBtn');
 
+// 音效相关
+const captureSfx = new Audio('sound/capture.ogg'); // 路径按你的实际情况改
+captureSfx.preload = 'auto';
+
 // 工具函数
 function nowMs() { return performance.now(); }
 function timeInStateMs() { return nowMs() - stateStart; }
@@ -84,6 +88,14 @@ function decideBigRotation(now) {
 
 // 处理抓取尝试
 function attemptCapture() {
+  try {
+    captureSfx.currentTime = 0; // 从头播放
+    captureSfx.play();
+  } catch (e) {
+    // 某些浏览器可能会拦截，失败就静默跳过即可
+  }
+
+
   const now = nowMs();
   // 1）如果还在准备状态：第一次按键/点击 = 开始游戏
   if (state === 'ready') {
