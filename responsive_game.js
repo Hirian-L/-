@@ -200,6 +200,13 @@ if (captureBtn) {
   });
 }
 
+// 整个页面点击/触摸都触发抓取
+document.body.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  attemptCapture();
+});
+
+
 // 防止触摸滚动页面
 canvas.addEventListener('touchstart', (e) => {
   e.preventDefault();
