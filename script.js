@@ -34,7 +34,7 @@ let roundStartTime = performance.now();
 const rectW = 200, rectH = 120;
 // 中间替换图片（请将附件图片保存为同目录下的 `center.png`）
 const centerImg = new Image();
-centerImg.src = 'center.png';
+centerImg.src = 'img/center.png';
 
 const stateText = document.getElementById('stateText');
 const hint = document.getElementById('hint');

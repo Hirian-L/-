@@ -40,7 +40,7 @@ let rectH = 120;
 
 // 图片加载
 const centerImg = new Image();
-centerImg.src = 'center.png';
+centerImg.src = 'img/center.png';
 
 // UI 元素
 const stateText = document.getElementById('stateText');
