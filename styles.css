@@ -1,5 +1,17 @@
 * { box-sizing: border-box; }
-html,body{ height:100%; margin:0; font-family: Arial, Helvetica, sans-serif; background:#1e1e1e; color:#ddd }
+html,
+
+body {
+  margin: 0;
+  font-family: "Microsoft YaHei", sans-serif;
+  background: #111;
+  color: #eee;
+  display: flex;
+  flex-direction: column;  /* ★★让内容从上到下排列 */
+  align-items: center;     /* ★★横向居中 */
+  padding: 16px;
+}
+
 #app{ display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column }
 #app{ display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column }
 #title{ color:#fff; margin:12px 0 6px 0 }
