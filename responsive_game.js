@@ -8,9 +8,9 @@ let CANVAS_WIDTH = 640;
 let CANVAS_HEIGHT = 480;
 
 // 参数（秒）
-const ROLL_DURATION = 1.0;
-const PAUSE_DURATION = 0.5;
-const BIG_ROT_DURATION = 1.2;
+const ROLL_DURATION = 1.23;
+const PAUSE_DURATION = 0.2;
+const BIG_ROT_DURATION = 1.23;
 const BIG_ROT_COOLDOWN = 6.0;
 const ROLL_ANGLE = 360;
 const BIG_ROT_ANGLE = 720;
