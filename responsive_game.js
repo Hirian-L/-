@@ -53,6 +53,9 @@ const captureBtn = document.getElementById('captureBtn');
 const captureSfx = new Audio('sound/capture.ogg'); // 路径按你的实际情况改
 captureSfx.preload = 'auto';
 
+const captureStrt = new Audio('sound/tiance_wristle.mp3'); // 路径按你的实际情况改
+captureStrt.preload = 'auto';
+
 // 工具函数
 function nowMs() { return performance.now(); }
 function timeInStateMs() { return nowMs() - stateStart; }
@@ -88,27 +91,40 @@ function decideBigRotation(now) {
 
 // 处理抓取尝试
 function attemptCapture() {
+  const now = nowMs();
+  // 1）如果还在准备状态：第一次按键/点击 = 开始游戏
+  if (state === 'ready') {
+    try {
+      captureStrt.currentTime = 0; // 从头播放
+      captureStrt.play();
+    } catch (e) {
+      // 某些浏览器可能会拦截，失败就静默跳过即可
+    }
+    startRound();
+    return;
+  } 
+  
+  // 如果当前处于成功暂停，按空格为继续（非抓取尝试）
+  else if (state === 'caught_pause') {
+    try {
+      captureStrt.currentTime = 0; // 从头播放
+      captureStrt.play();
+    } catch (e) {
+      // 某些浏览器可能会拦截，失败就静默跳过即可
+    }  
+    continueGame();
+    return;
+  }
+  else {
+
+  // 播放按键音效（不论是开始游戏、抓取成功还是失败）
   try {
     captureSfx.currentTime = 0; // 从头播放
     captureSfx.play();
   } catch (e) {
     // 某些浏览器可能会拦截，失败就静默跳过即可
   }
-
-
-  const now = nowMs();
-  // 1）如果还在准备状态：第一次按键/点击 = 开始游戏
-  if (state === 'ready') {
-    startRound();
-    return;
   }
-  
-  // 如果当前处于成功暂停，按空格为继续（非抓取尝试）
-  if (state === 'caught_pause') {
-    continueGame();
-    return;
-  }
-
   // 冷却检查
   if (now - lastCaptureAttemptTime < CAPTURE_COOLDOWN) {
     return;
