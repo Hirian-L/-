@@ -33,6 +33,7 @@ const FAILURE_MESSAGE_DURATION = 2000;
 
 // 回合开始时间
 let roundStartTime = performance.now();
+let elapsedAtCatch = null;
 
 // 矩形大小（根据画布大小调整）
 let rectW = 200;
@@ -100,8 +101,8 @@ function attemptCapture() {
     // 成功抓取
     caught = true;
     startState('caught_pause');
-    // 更新左侧统计
-    const elapsed = (now - roundStartTime) / 1000;
+    // 抓住那一刻“定格耗时”
+    elapsedAtCatch = (now - roundStartTime) / 1000;
     // Canvas中自己更新
     // const elapsedEl = document.getElementById('elapsed');
     // const failuresEl = document.getElementById('failures');
@@ -126,6 +127,7 @@ function continueGame() {
   // 重新开始一轮，重置统计
   roundStartTime = nowMs();
   failureCount = 0;
+  elapsedAtCatch = null;
   // Canvas中自己更新
   // const elapsedEl = document.getElementById('elapsed');
   // const failuresEl = document.getElementById('failures');
@@ -254,14 +256,18 @@ function draw() {
   // 绘制耗时与失败次数字样（左上角）
   ctx.fillStyle = '#ffffff';
   ctx.font = '18px Arial';
-  let y = 22;
+  let y = 24;
 
-  // 只有在游戏未结束或者暂停时显示
-  if (roundStartTime) {
-    const elapsedSec = ((nowMs() - roundStartTime) / 1000).toFixed(2);
-    ctx.fillText(`耗时：${elapsedSec}s`, 10, y);
-    y += 22;
+  // 如果已经抓住过一次，就用抓住那一刻的时间；否则用当前累计时间
+  let elapsedSec;
+  if (elapsedAtCatch !== null) {
+    elapsedSec = elapsedAtCatch.toFixed(2);
+  } else {
+    elapsedSec = ((nowMs() - roundStartTime) / 1000).toFixed(2);
   }
+
+  ctx.fillText(`耗时：${elapsedSec}s`, 10, y);
+  y += 22;
 
   ctx.fillText(`失败次数：${failureCount}`, 10, y);
   y += 22;
