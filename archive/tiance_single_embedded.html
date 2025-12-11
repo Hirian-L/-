@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <!-- Privacy-friendly analytics by Plausible -->
+  <script async src="https://plausible.io/js/pa-l0W4i9nToI5NLXITF4gyG.js"></script>
+  <script>
+    window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+    plausible.init()
+  </script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>天策模拟器 — 单文件版</title>
+  <style>
+    * { box-sizing: border-box; }
+    html,body{ height:100%; margin:0; font-family: Arial, Helvetica, sans-serif; background:#1e1e1e; color:#ddd }
+    #app{ display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column }
+    #title{ color:#fff; margin:12px 0 6px 0 }
+    #main{ display:flex; align-items:center; gap:18px }
+    canvas{ background:#1b1b1b; border:1px solid #333; box-shadow:0 6px 20px rgba(0,0,0,0.6) }
+    #leftStats{ width:180px; color:#cfe; text-align:left }
+    #leftStats p{ margin:6px 0; font-size:16px }
+    #ui{ margin-top:12px; text-align:center }
+    #hint{ color:#ffd880 }
+    #cooldown{ color:#9ecbff }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1 id="title">天策模拟器</h1>
+    <div id="main">
+      <canvas id="gameCanvas" width="640" height="480"></canvas>
+      <div id="leftStats">
+        <p id="elapsed"></p>
+        <p id="failures"></p>
+      </div>
+    </div>
+    <div id="ui">
+      <p id="stateText">状态：--</p>
+      <p id="hint">按 空格 在停顿窗口内抓取</p>
+      <p id="cooldown">大旋转冷却：--</p>
+    </div>
+  </div>
+
+  <script>
+  // 单文件版 JS，与原 script.js 行为一致（略有结构调整以便内联）
+  (function(){
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // 参数（秒）
+    const ROLL_DURATION = 1.0;
+    const PAUSE_DURATION = 0.2;
+    const BIG_ROT_DURATION = 1.2;
+    const BIG_ROT_COOLDOWN = 6.0;
+
+    const ROLL_ANGLE = 360; // deg per roll
+    const BIG_ROT_ANGLE = 720; // deg
+
+    let state = 'rolling';
+    let stateStart = performance.now();
+    let baseAngle = 0; // deg
+    let angle = 0; // deg
+    let lastBigTime = -BIG_ROT_COOLDOWN * 1000;
+    let caught = false;
+
+    // 玩家抓取相关
+    const CAPTURE_COOLDOWN = 1500; // ms
+    let lastCaptureAttemptTime = -Infinity;
+    let failureCount = 0;
+    let failureMessage = '';
+    let failureMessageTime = -Infinity;
+    const FAILURE_MESSAGE_DURATION = 2000;
+    // 回合开始时间（用于统计耗时）
+    let roundStartTime = performance.now();
+
+    const rectW = 200, rectH = 120;
+
+    // 中心图片：支持内嵌 data URL（由脚本替换占位符），否则回退到同目录的 center.png
+    const centerImg = new Image();
+    const CENTER_DATA_URL = '__CENTER_IMAGE_DATA_URL__';
+    if (CENTER_DATA_URL && CENTER_DATA_URL !== '__CENTER_IMAGE_DATA_URL__') {
+      centerImg.src = CENTER_DATA_URL;
+    } else {
+      centerImg.src = 'img/center.png';
+    }
+
+    const stateText = document.getElementById('stateText');
+    const hint = document.getElementById('hint');
+    const cooldownEl = document.getElementById('cooldown');
+
+    function nowMs() { return performance.now(); }
+    function timeInStateMs(){ return nowMs() - stateStart; }
+    function startState(s){ state = s; stateStart = nowMs(); }
+
+    function decideBigRotation(now){
+      if ((now - lastBigTime) >= BIG_ROT_COOLDOWN * 1000 && Math.random() < 0.5) return true;
+      return false;
+    }
+
+    window.addEventListener('keydown', (e)=>{
+      if (e.code === 'Space'){
+        if (state === 'caught_pause'){
+          caught = false;
+          baseAngle = angle % 360;
+          roundStartTime = nowMs();
+          failureCount = 0;
+          document.getElementById('elapsed').textContent = '';
+          document.getElementById('failures').textContent = '';
+          startState('rolling');
+          return;
+        }
+
+        const now = nowMs();
+        if (now - lastCaptureAttemptTime < CAPTURE_COOLDOWN) {
+          return;
+        }
+        lastCaptureAttemptTime = now;
+
+        if (state === 'pause' && timeInStateMs() <= PAUSE_DURATION*1000){
+          caught = true;
+          startState('caught_pause');
+          const elapsed = (now - roundStartTime)/1000;
+          document.getElementById('elapsed').textContent = `耗时：${elapsed.toFixed(2)}s`;
+          document.getElementById('failures').textContent = `失败次数：${failureCount}`;
+        } else {
+          failureCount++;
+          if (!failureMessage) {
+            failureMessage = '后跳都抓不到？杂鱼';
+          } else {
+            failureMessage += '杂鱼';
+          }
+          failureMessageTime = now;
+        }
+      }
+    });
+
+    canvas.addEventListener('pointerdown', ()=>{
+      if (state === 'caught_pause'){
+        caught = false;
+        baseAngle = angle % 360;
+        roundStartTime = nowMs();
+        failureCount = 0;
+        document.getElementById('elapsed').textContent = '';
+        document.getElementById('failures').textContent = '';
+        startState('rolling');
+        return;
+      }
+      const now = nowMs();
+      if (now - lastCaptureAttemptTime < CAPTURE_COOLDOWN) return;
+      lastCaptureAttemptTime = now;
+      if (state === 'pause' && timeInStateMs() <= PAUSE_DURATION*1000){
+        caught = true;
+        startState('caught_pause');
+        const elapsed = (now - roundStartTime)/1000;
+        document.getElementById('elapsed').textContent = `耗时：${elapsed.toFixed(2)}s`;
+        document.getElementById('failures').textContent = `失败次数：${failureCount}`;
+      } else {
+        failureCount++;
+        if (!failureMessage) {
+          failureMessage = '后跳都抓不到？杂鱼';
+        } else {
+          failureMessage += '杂鱼';
+        }
+        failureMessageTime = now;
+      }
+    });
+
+    function update(ms){
+      const now = nowMs();
+      if (state === 'rolling'){
+        const t = Math.min(1, timeInStateMs() / (ROLL_DURATION*1000));
+        angle = baseAngle + t * ROLL_ANGLE;
+        if (t >= 1.0){
+          if (decideBigRotation(now)){
+            lastBigTime = now;
+            baseAngle = angle % 360;
+            startState('big_rot');
+          } else {
+            baseAngle = angle % 360;
+            startState('pause');
+          }
+        }
+      } else if (state === 'pause'){
+        angle = baseAngle;
+        if (timeInStateMs() >= PAUSE_DURATION*1000){
+          if (!caught){
+            baseAngle = angle % 360;
+            startState('rolling');
+          }
+        }
+      } else if (state === 'big_rot'){
+        const t = Math.min(1, timeInStateMs() / (BIG_ROT_DURATION*1000));
+        angle = baseAngle + t * BIG_ROT_ANGLE;
+        if (t >= 1.0){
+          baseAngle = angle % 360;
+          startState('rolling');
+        }
+      } else if (state === 'caught_pause'){
+        angle = baseAngle % 360;
+      }
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      ctx.save();
+      ctx.translate(W/2, H/2);
+      ctx.rotate(-angle * Math.PI/180);
+      if (centerImg && centerImg.complete && centerImg.naturalWidth) {
+        const iw = centerImg.naturalWidth, ih = centerImg.naturalHeight;
+        const scale = Math.min(rectW / iw, rectH / ih);
+        const drawW = iw * scale, drawH = ih * scale;
+        ctx.drawImage(centerImg, -drawW/2, -drawH/2, drawW, drawH);
+      } else {
+        ctx.fillStyle = '#c8643c';
+        ctx.fillRect(-rectW/2, -rectH/2, rectW, rectH);
+      }
+      ctx.restore();
+
+      stateText.textContent = `状态：${state}`;
+      if (state === 'pause'){
+        const remaining = Math.max(0, PAUSE_DURATION - timeInStateMs()/1000);
+        hint.textContent = `停顿窗口：${remaining.toFixed(2)}s — 在此按 空格 抓取`;
+      } else if (state === 'caught_pause'){
+        hint.textContent = '抓取成功！按 空格 或 点击 继续';
+      } else if (state === 'big_rot'){
+        const remaining = Math.max(0, BIG_ROT_DURATION - timeInStateMs()/1000);
+        hint.textContent = `大旋转中：${remaining.toFixed(2)}s`;
+      } else {
+        hint.textContent = '按 空格 在停顿窗口内抓取';
+      }
+
+      const sinceBig = (nowMs() - lastBigTime)/1000;
+      const cd = Math.max(0, BIG_ROT_COOLDOWN - sinceBig);
+      cooldownEl.textContent = `大旋转冷却：${cd.toFixed(1)}s`;
+
+      // 角度信息与失败提示
+      ctx.fillStyle = '#ddd';
+      ctx.font = '16px Arial';
+      ctx.fillText(`角度: ${(angle%360).toFixed(1)}°`, 10, 20);
+
+      const now = nowMs();
+      if (now - failureMessageTime <= FAILURE_MESSAGE_DURATION){
+        ctx.fillStyle = '#ffd080';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(failureMessage, W/2, H/2 - rectH/2 - 20);
+      }
+    }
+
+    function loop(ms){
+      update(ms);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    startState('rolling');
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
