@@ -102,10 +102,11 @@ function attemptCapture() {
     startState('caught_pause');
     // 更新左侧统计
     const elapsed = (now - roundStartTime) / 1000;
-    const elapsedEl = document.getElementById('elapsed');
-    const failuresEl = document.getElementById('failures');
-    if (elapsedEl) elapsedEl.textContent = `耗时：${elapsed.toFixed(2)}s`;
-    if (failuresEl) failuresEl.textContent = `失败次数：${failureCount}`;
+    // Canvas中自己更新
+    // const elapsedEl = document.getElementById('elapsed');
+    // const failuresEl = document.getElementById('failures');
+    // if (elapsedEl) elapsedEl.textContent = `耗时：${elapsed.toFixed(2)}s`;
+    // if (failuresEl) failuresEl.textContent = `失败次数：${failureCount}`;
   } else {
     // 抓取失败（在非停顿窗口按下）
     failureCount++;
@@ -125,10 +126,11 @@ function continueGame() {
   // 重新开始一轮，重置统计
   roundStartTime = nowMs();
   failureCount = 0;
-  const elapsedEl = document.getElementById('elapsed');
-  const failuresEl = document.getElementById('failures');
-  if (elapsedEl) elapsedEl.textContent = '';
-  if (failuresEl) failuresEl.textContent = '';
+  // Canvas中自己更新
+  // const elapsedEl = document.getElementById('elapsed');
+  // const failuresEl = document.getElementById('failures');
+  // if (elapsedEl) elapsedEl.textContent = '';
+  // if (failuresEl) failuresEl.textContent = '';
   startState('rolling');
 }
 
@@ -249,10 +251,25 @@ function draw() {
   const cd = Math.max(0, BIG_ROT_COOLDOWN - sinceBig);
   cooldownEl.textContent = `大旋转冷却：${cd.toFixed(1)}s`;
 
-  // 在画布上绘制角度信息
-  ctx.fillStyle = '#ddd';
-  ctx.font = '16px Arial';
-  ctx.fillText(`角度: ${(angle % 360).toFixed(1)}°`, 10, 20);
+  // 绘制耗时与失败次数字样（左上角）
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '18px Arial';
+  let y = 22;
+
+  // 只有在游戏未结束或者暂停时显示
+  if (roundStartTime) {
+    const elapsedSec = ((nowMs() - roundStartTime) / 1000).toFixed(2);
+    ctx.fillText(`耗时：${elapsedSec}s`, 10, y);
+    y += 22;
+  }
+
+  ctx.fillText(`失败次数：${failureCount}`, 10, y);
+  y += 22;
+
+  // // 在画布上绘制角度信息
+  // ctx.fillStyle = '#ddd';
+  // ctx.font = '16px Arial';
+  // ctx.fillText(`角度: ${(angle % 360).toFixed(1)}°`, 10, 20);
 
   // 显示失败提示（若有）
   const now = nowMs();
