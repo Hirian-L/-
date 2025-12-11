@@ -117,20 +117,19 @@ function attemptCapture() {
   }
   else {
 
-  // 播放按键音效（不论是开始游戏、抓取成功还是失败）
-  try {
-    captureSfx.currentTime = 0; // 从头播放
-    captureSfx.play();
-  } catch (e) {
-    // 某些浏览器可能会拦截，失败就静默跳过即可
-  }
   }
   // 冷却检查
   if (now - lastCaptureAttemptTime < CAPTURE_COOLDOWN) {
     return;
   }
   lastCaptureAttemptTime = now;
-
+    // 播放按键音效（不论是开始游戏、抓取成功还是失败）
+  try {
+    captureSfx.currentTime = 0; // 从头播放
+    captureSfx.play();
+  } catch (e) {
+    // 某些浏览器可能会拦截，失败就静默跳过即可
+  }
   if (state === 'pause' && timeInStateMs() <= PAUSE_DURATION * 1000) {
     // 成功抓取
     caught = true;
