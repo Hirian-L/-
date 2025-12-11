@@ -32,7 +32,7 @@ let failureMessageTime = -Infinity;
 const FAILURE_MESSAGE_DURATION = 2000;
 
 // 回合开始时间
-let roundStartTime = performance.now();
+let roundStartTime = null;
 let elapsedAtCatch = null;
 
 // 矩形大小（根据画布大小调整）
@@ -306,8 +306,12 @@ function draw() {
 
   // 如果已经抓住过一次，就用抓住那一刻的时间；否则用当前累计时间
   let elapsedSec;
-  if (elapsedAtCatch !== null) {
+  if (state === 'ready' || roundStartTime === null) {
+    elapsedSec = '0.00';
+  
+  }else if (elapsedAtCatch !== null ) {
     elapsedSec = elapsedAtCatch.toFixed(2);
+
   } else {
     elapsedSec = ((nowMs() - roundStartTime) / 1000).toFixed(2);
   }
