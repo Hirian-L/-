@@ -1,27 +1,6 @@
 # 天策模拟器（简版）
 
-这是一个非常小的回合制战斗模拟器示例（Python 实现），用于快速试验单位属性与战斗流程。
-
-文件：
-- `tiance_simulator.py`：模拟器主脚本。
-
-运行（Windows PowerShell）：
-```powershell
-# 运行示例对战
-python C:\Users\EDY\12\tiance_simulator.py --demo
-
-# 使用自定义单位参数（HP ATK DEF SPD）
-python C:\Users\EDY\12\tiance_simulator.py --a 120 30 10 20 --b 150 25 12 15
-```
-
-天策小游 — 抓取小游戏（Pygame）
-```powershell
-# 安装依赖（如果尚未安装）
-python -m pip install -r C:\Users\EDY\12\requirements.txt
-
-# 运行小游戏
-python C:\Users\EDY\12\tiance_minigame.py
-```
+	抓住后跳翻滚的奶花吧！ 小心她变得嚣张噢！ 
 
 说明：
 - 游戏中间有一个矩形按节奏翻滚：每次翻滚耗时 0.9s，之后会有 0.2s 的停顿窗口。
@@ -29,8 +8,9 @@ python C:\Users\EDY\12\tiance_minigame.py
 - 每次翻滚完成后有 50% 概率触发一次持续 1.2s 的大旋转，且每 6s 最多触发一次。
 - 大旋转前后没有停顿。
 
-如需调整参数或增加功能（UI 美化、音效、难度模式等），告诉我即可扩展。
 
+
+## 本地测试方法（不可食用/施工中）
 网页版（本地测试）
 -----------------
 
