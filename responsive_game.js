@@ -16,7 +16,7 @@ const ROLL_ANGLE = 360;
 const BIG_ROT_ANGLE = 720;
 
 // 游戏状态
-let state = 'rolling';
+let state = 'ready';
 let stateStart = performance.now();
 let baseAngle = 0;
 let angle = 0;
@@ -84,13 +84,19 @@ function decideBigRotation(now) {
 
 // 处理抓取尝试
 function attemptCapture() {
+  const now = nowMs();
+  // 1）如果还在准备状态：第一次按键/点击 = 开始游戏
+  if (state === 'ready') {
+    startRound();
+    return;
+  }
+  
   // 如果当前处于成功暂停，按空格为继续（非抓取尝试）
   if (state === 'caught_pause') {
     continueGame();
     return;
   }
 
-  const now = nowMs();
   // 冷却检查
   if (now - lastCaptureAttemptTime < CAPTURE_COOLDOWN) {
     return;
@@ -103,11 +109,6 @@ function attemptCapture() {
     startState('caught_pause');
     // 抓住那一刻“定格耗时”
     elapsedAtCatch = (now - roundStartTime) / 1000;
-    // Canvas中自己更新
-    // const elapsedEl = document.getElementById('elapsed');
-    // const failuresEl = document.getElementById('failures');
-    // if (elapsedEl) elapsedEl.textContent = `耗时：${elapsed.toFixed(2)}s`;
-    // if (failuresEl) failuresEl.textContent = `失败次数：${failureCount}`;
   } else {
     // 抓取失败（在非停顿窗口按下）
     failureCount++;
@@ -120,20 +121,20 @@ function attemptCapture() {
   }
 }
 
+// 开始一轮新游戏（首次开始 / 抓取成功后继续 都用它）
+function startRound() {
+  caught = false;
+  baseAngle = angle % 360;      // 从当前角度开始转
+  roundStartTime = nowMs();     // 重新计时
+  failureCount = 0;             // 失败次数清零
+  elapsedAtCatch = null;        //（如果你用了定格时间的话）
+  failureMessage = '';          // 清掉“杂鱼”提示
+  startState('rolling');        // 正式开始翻滚
+}
+
 // 继续游戏
 function continueGame() {
-  caught = false;
-  baseAngle = angle % 360;
-  // 重新开始一轮，重置统计
-  roundStartTime = nowMs();
-  failureCount = 0;
-  elapsedAtCatch = null;
-  // Canvas中自己更新
-  // const elapsedEl = document.getElementById('elapsed');
-  // const failuresEl = document.getElementById('failures');
-  // if (elapsedEl) elapsedEl.textContent = '';
-  // if (failuresEl) failuresEl.textContent = '';
-  startState('rolling');
+  startRound();
 }
 
 // 键盘事件
@@ -166,6 +167,13 @@ canvas.addEventListener('touchstart', (e) => {
 // 更新游戏状态
 function update(ms) {
   const now = nowMs();
+
+  // 准备状态：啥也不动，只画一个静止图标等你按键
+  if (state === 'ready') {
+    angle = baseAngle % 360;  // 通常是 0
+    return;
+  }
+
   if (state === 'rolling') {
     const t = Math.min(1, timeInStateMs() / (ROLL_DURATION * 1000));
     angle = baseAngle + t * ROLL_ANGLE;
@@ -223,21 +231,59 @@ function draw() {
   ctx.restore();
 
   // 更新UI文本
-  stateText.textContent = `状态：${state === 'rolling' ? '翻滚中' : state === 'pause' ? '停顿窗口' : state === 'big_rot' ? '大旋转' : '抓取成功'}`;
+  stateText.textContent = `状态：${state === 'rolling' ? '翻滚！' : state === 'pause' ? '停顿窗口' : state === 'big_rot' ? '大旋转' : '抓取成功'}`;
   
-  if (state === 'pause') {
-    const remaining = Math.max(0, PAUSE_DURATION - timeInStateMs() / 1000);
-    if (window.innerWidth > 768) {
-      hint.textContent = `停顿窗口：${remaining.toFixed(2)}s — 在此按 空格 抓取`;
-    } else {
-      hint.textContent = `停顿窗口：${remaining.toFixed(2)}s — 点击按钮抓取`;
-    }
+
+    if (state === 'ready') {
+    stateText.textContent = '状态：准备';
+  } else if (state === 'rolling') {
+    stateText.textContent = '状态：后跳！';
+  } else if (state === 'pause') {
+    stateText.textContent = '状态：有缝！';
+  } else if (state === 'big_rot') {
+    stateText.textContent = '状态：小轻功~';
   } else if (state === 'caught_pause') {
-    hint.textContent = '抓取成功！点击继续';
+    stateText.textContent = '状态：抓到啦！';
+  }
+
+  if (state === 'ready') {
+  if (window.innerWidth > 768) {
+    hint.textContent = '按 空格 开始游戏';
+  } else {
+    hint.textContent = '点击按钮开始游戏';
+  }
+  if (captureBtn) captureBtn.textContent = '开始游戏';
+} else if (state === 'pause') {
+  const remaining = Math.max(0, PAUSE_DURATION - timeInStateMs() / 1000);
+  if (window.innerWidth > 768) {
+    hint.textContent = `停顿窗口：${remaining.toFixed(2)}s — 在此按 空格 抓取`;
+  } else {
+    hint.textContent = `停顿窗口：${remaining.toFixed(2)}s — 点击按钮抓取`;
+  }
+  if (captureBtn) captureBtn.textContent = '抓取';
+} else if (state === 'caught_pause') {
+  hint.textContent = '抓到啦！按键或点击继续';
+
+
+
+  // if (state === 'pause') {
+  //   const remaining = Math.max(0, PAUSE_DURATION - timeInStateMs() / 1000);
+  //   if (window.innerWidth > 768) {
+  //     hint.textContent = `停顿窗口：${remaining.toFixed(2)}s — 在此按 空格 抓取`;
+  //   } else {
+  //     hint.textContent = `停顿窗口：${remaining.toFixed(2)}s — 点击按钮抓取`;
+  //   }
+  // } else if (state === 'ready'){
+  //   hint.textContent = '按空格或点击开始抓取奶花';
+
+  // } else if (state === 'caught_pause') {
+  //   hint.textContent = '抓取成功！点击继续';
+
+
     if (captureBtn) captureBtn.textContent = '继续游戏';
   } else if (state === 'big_rot') {
     const remaining = Math.max(0, BIG_ROT_DURATION - timeInStateMs() / 1000);
-    hint.textContent = `大旋转中：${remaining.toFixed(2)}s`;
+    hint.textContent = `小轻功中：${remaining.toFixed(2)}s`;
     if (captureBtn) captureBtn.textContent = '抓取';
   } else {
     if (window.innerWidth > 768) {
@@ -251,7 +297,7 @@ function draw() {
   // 更新冷却时间
   const sinceBig = (nowMs() - lastBigTime) / 1000;
   const cd = Math.max(0, BIG_ROT_COOLDOWN - sinceBig);
-  cooldownEl.textContent = `大旋转冷却：${cd.toFixed(1)}s`;
+  cooldownEl.textContent = `小轻功CD：${cd.toFixed(1)}s`;
 
   // 绘制耗时与失败次数字样（左上角）
   ctx.fillStyle = '#ffffff';
@@ -279,12 +325,27 @@ function draw() {
 
   // 显示失败提示（若有）
   const now = nowMs();
+  // if (now - failureMessageTime <= FAILURE_MESSAGE_DURATION) {
+  //   ctx.fillStyle = '#ffd080';
+  //   ctx.font = '20px Arial';
+  //   ctx.textAlign = 'center';
+  //   ctx.fillText(failureMessage, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - rectH / 2 - 20);
+  // }
+  
   if (now - failureMessageTime <= FAILURE_MESSAGE_DURATION) {
-    ctx.fillStyle = '#ffd080';
-    ctx.font = '20px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(failureMessage, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - rectH / 2 - 20);
-  }
+  ctx.save();  // 保存当前状态（包括 textAlign）
+  ctx.fillStyle = '#ffd080';
+  ctx.font = '20px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(
+    failureMessage,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 2 - rectH / 2 - 20
+  );
+  ctx.restore();  // 恢复，外面就还是原来的对齐方式
+}
+  
 }
 
 // 游戏循环
@@ -306,7 +367,7 @@ function init() {
   window.addEventListener('resize', resizeCanvas);
   
   // 开始游戏
-  startState('rolling');
+  startState('ready');
   requestAnimationFrame(loop);
 }
 
