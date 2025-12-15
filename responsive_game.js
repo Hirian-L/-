@@ -53,7 +53,7 @@ const captureBtn  = document.getElementById('captureBtn');
 const captureSfx = new Audio('sound/capture.ogg');
 captureSfx.preload = 'auto';
 
-const captureStrt = new Audio('sound/tiance_wristle.mp3');
+const captureStrt = new Audio('sound/tiance_wristle.ogg');
 captureStrt.preload = 'auto';
 
 const backJump = new Audio('sound/back_jump.ogg');
