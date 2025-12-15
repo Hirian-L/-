@@ -230,7 +230,7 @@ function update(ms) {
   if (state === 'rolling') {
     const t = Math.min(1, timeInStateMs() / (ROLL_DURATION * 1000));
     angle = baseAngle + t * ROLL_ANGLE;
-    console.log(t % 1.0);
+    // console.log(t % 1.0);
     if (Math.abs(t % 1 -0.25) < 0.01) {
       try {
         // console.log('play back jump sound');
