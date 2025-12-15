@@ -56,6 +56,11 @@ captureSfx.preload = 'auto';
 const captureStrt = new Audio('sound/tiance_wristle.mp3');
 captureStrt.preload = 'auto';
 
+const backJump = new Audio('sound/back_jump.ogg');
+backJump.preload = 'auto';
+
+const bigJump = new Audio('sound/big_jump.ogg');
+bigJump.preload = 'auto';
 // ==================== 工具函数 ====================
 function nowMs() { return performance.now(); }
 function timeInStateMs() { return nowMs() - stateStart; }
@@ -225,11 +230,25 @@ function update(ms) {
   if (state === 'rolling') {
     const t = Math.min(1, timeInStateMs() / (ROLL_DURATION * 1000));
     angle = baseAngle + t * ROLL_ANGLE;
+    console.log(t % 1.0);
+    if (Math.abs(t % 1 -0.25) < 0.01) {
+      try {
+        // console.log('play back jump sound');
+        backJump.currentTime = 0;
+        backJump.play();
+      } catch (e) {}
+    }
+
     if (t >= 1.0) {
       if (decideBigRotation(now)) {
         lastBigTime = now;
         baseAngle = angle % 360;
-        startState('big_rot');
+        startState('big_rot'); 
+        try {
+        // console.log('play back jump sound');
+        bigJump.currentTime = 0;
+        bigJump.play();
+      } catch (e) {}
       } else {
         baseAngle = angle % 360;
         startState('pause');
