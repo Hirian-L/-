@@ -192,18 +192,7 @@ window.addEventListener('keydown', (e) => {
     attemptCapture();
   }
 });
-
-canvas.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  attemptCapture();
-});
-
-if (captureBtn) {
-  captureBtn.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    attemptCapture();
-  });
-}
+
 
 // 整个页面点击/触摸都触发抓取
 document.body.addEventListener('pointerdown', (e) => {
