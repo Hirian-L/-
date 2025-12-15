@@ -50,16 +50,16 @@ const cooldownEl  = document.getElementById('cooldown');
 const captureBtn  = document.getElementById('captureBtn');
 
 // 音效
-const captureSfx = new Audio('sound/capture.ogg');
+const captureSfx = new Audio('sound/capture.OGG');
 captureSfx.preload = 'auto';
 
-const captureStrt = new Audio('sound/tiance_wristle.ogg');
+const captureStrt = new Audio('sound/tiance_wristle.OGG');
 captureStrt.preload = 'auto';
 
-const backJump = new Audio('sound/back_jump.ogg');
+const backJump = new Audio('sound/back_jump.OGG');
 backJump.preload = 'auto';
 
-const bigJump = new Audio('sound/big_jump.ogg');
+const bigJump = new Audio('sound/big_jump.OGG');
 bigJump.preload = 'auto';
 // ==================== 工具函数 ====================
 function nowMs() { return performance.now(); }
@@ -192,7 +192,8 @@ window.addEventListener('keydown', (e) => {
     attemptCapture();
   }
 });
-
+
+
 
 // 整个页面点击/触摸都触发抓取
 document.body.addEventListener('pointerdown', (e) => {
